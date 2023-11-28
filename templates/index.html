@@ -1,0 +1,21 @@
+{%extends "meta.html" %}
+
+{% block head %}
+<title>{{config.blog_name}}</title>
+{% endblock %}
+
+{% block body %}
+
+<p>
+    {{config.description}}
+</p>
+
+<ul>
+    {% for article in articles %}
+    <li>
+        <a href="/article/{{article.id}}">{{article.title}}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

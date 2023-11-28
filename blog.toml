@@ -1,0 +1,9 @@
+[server]
+blog_name = "Ramblings & Musings"
+author = "Clemens Tiedt"
+description = "My less edited, more stream of conciousness thoughts"
+addr = "0.0.0.0:4444"
+
+[client]
+addr = "http://localhost:4444"
+secret = ""

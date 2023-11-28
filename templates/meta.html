@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">-->
+    <link rel="stylesheet" href="/static/style.css">
+
+    {% block head %}
+    <title>{{config.blog_name}}</title>
+    {% endblock %}
+</head>
+
+<body>
+    <nav role="navigation" class="navbar">
+        <div class="navbar-brand">
+            <a href="/" class="navbar-item has-text-weight-bold">{{config.blog_name}}</a>
+        </div>
+    </nav>
+    <main class="content">
+        {% block body %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <a href="{{config.addr}}">Home</a>
+    </footer>
+</body>
+
+</html>

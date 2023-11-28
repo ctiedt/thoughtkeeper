@@ -1,0 +1,14 @@
+{%extends "meta.html" %}
+
+{% block head %}
+<title>{{article.title}}</title>
+{% endblock %}
+
+{% block body %}
+
+<h1>{{article.title}}</h1>
+<p>{{config.author}}</p>
+<p>{{article.published}}</p>
+
+{{article.content.clone()|markdown}}
+{% endblock %}
