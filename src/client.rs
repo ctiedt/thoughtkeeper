@@ -80,3 +80,29 @@ pub async fn yank(conf: ClientConfig, id: String) -> miette::Result<()> {
 
     Ok(())
 }
+
+pub async fn update(
+    conf: ClientConfig,
+    id: String,
+    title: Option<String>,
+    path: Option<String>,
+) -> miette::Result<()> {
+    let content = if let Some(path) = path {
+        Some(tokio::fs::read_to_string(path).await.into_diagnostic()?)
+    } else {
+        None
+    };
+
+    let resp = Client::new()
+        .post(format!("{}/api", conf.addr))
+        .json(&Request::UpdateArticle { id, title, content })
+        .send()
+        .await
+        .into_diagnostic()?;
+    let data: Response = resp.json().await.into_diagnostic()?;
+    if let Response::Error(e) = data {
+        println!("An error occured: {e}");
+    }
+
+    Ok(())
+}

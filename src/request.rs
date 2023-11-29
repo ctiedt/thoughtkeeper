@@ -5,9 +5,21 @@ use crate::article::Article;
 
 #[derive(Serialize, Deserialize)]
 pub enum Request {
-    CreateArticle { title: String, content: String },
-    GetArticle { id: String },
-    YankArticle { id: String },
+    CreateArticle {
+        title: String,
+        content: String,
+    },
+    GetArticle {
+        id: String,
+    },
+    YankArticle {
+        id: String,
+    },
+    UpdateArticle {
+        id: String,
+        title: Option<String>,
+        content: Option<String>,
+    },
     ListArticles,
 }
 

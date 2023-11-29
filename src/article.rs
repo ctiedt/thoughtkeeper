@@ -1,5 +1,6 @@
 use askama::Template;
 use chrono::{NaiveDateTime, Utc};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -21,6 +22,14 @@ impl Article {
             content,
             published: Utc::now().naive_local(),
         }
+    }
+
+    pub fn published(&self) -> String {
+        self.published.format("%d.%m.%Y %H:%M").to_string()
+    }
+
+    pub fn teaser(&self) -> String {
+        self.content.lines().take(5).join("\n")
     }
 }
 

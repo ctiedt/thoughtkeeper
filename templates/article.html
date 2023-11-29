@@ -2,13 +2,22 @@
 
 {% block head %}
 <title>{{article.title}}</title>
+
+<meta property="og:title" content="{{article.title}}" />
+<meta property="og:description" content="{{article.teaser()}}" />
+<meta property="og:type" content="article" />
+{% if let Some(domain) = config.domain %}
+<meta property="og:url" content="https://{{domain}}/article/{{article.id}}" />
+{% endif %}
 {% endblock %}
 
 {% block body %}
 
-<h1>{{article.title}}</h1>
-<p>{{config.author}}</p>
-<p>{{article.published}}</p>
+<header>
+    <p><i>{{config.author}} | {{article.published()}}</i></p>
+    <h1>{{article.title}}</h1>
+</header>
 
 {{article.content.clone()|markdown}}
+
 {% endblock %}

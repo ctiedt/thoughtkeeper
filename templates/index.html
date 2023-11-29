@@ -10,12 +10,17 @@
     {{config.description}}
 </p>
 
-<ul>
-    {% for article in articles %}
-    <li>
-        <a href="/article/{{article.id}}">{{article.title}}</a>
-    </li>
-    {% endfor %}
-</ul>
+
+{% for article in articles %}
+<article>
+    <header>
+        <p>{{article.published()}}</p>
+        <a href="/article/{{article.id}}">
+            <h2>{{article.title}}</h2>
+        </a>
+    </header>
+    <p>{{article.teaser()|markdown}}</p>
+</article>
+{% endfor %}
 
 {% endblock %}

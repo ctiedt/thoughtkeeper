@@ -1,8 +1,10 @@
 [server]
 blog_name = "Ramblings & Musings"
 author = "Clemens Tiedt"
-description = "My less edited, more stream of conciousness thoughts"
+description = "My less edited, more stream of consciousness thoughts. May contain opinions."
+footer_links = { "Home" = "/", "My Website" = "https://tiedt.dev", "My Other Blog" = "https://blog.tiedt.dev" }
 addr = "0.0.0.0:4444"
+domain = "ramblings.tiedt.dev"
 
 [client]
 addr = "http://localhost:4444"

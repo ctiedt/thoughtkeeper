@@ -1,14 +1,13 @@
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::{
-    error_handling::HandleError,
     extract::{Path, State},
     routing::{get, get_service, post},
     Json, Router,
 };
 
 use miette::IntoDiagnostic;
-use reqwest::StatusCode;
+
 use sqlx::{pool::PoolConnection, Pool, Sqlite, SqlitePool};
 use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
@@ -88,6 +87,37 @@ async fn handle_api_request(
             ))
             .into_response()
         }
+        Request::UpdateArticle { id, title, content } => {
+            match (title, content) {
+                (Some(title), Some(content)) => {
+                    sqlx::query!(
+                        "UPDATE articles SET title = ?, content = ? WHERE id = ?",
+                        title,
+                        content,
+                        id
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .unwrap();
+                }
+                (None, Some(content)) => {
+                    sqlx::query!("UPDATE articles SET content = ? WHERE id = ?", content, id)
+                        .execute(&mut *conn)
+                        .await
+                        .unwrap();
+                }
+                (Some(title), None) => {
+                    sqlx::query!("UPDATE articles SET title = ? WHERE id = ?", title, id)
+                        .execute(&mut *conn)
+                        .await
+                        .unwrap();
+                }
+
+                (None, None) => (),
+            }
+
+            Json(Response::Ok).into_response()
+        }
     }
 }
 
@@ -118,7 +148,7 @@ struct IndexPage {
 
 async fn index(State(state): State<BlogState>) -> impl IntoResponse {
     let mut conn = state.get_conn().await;
-    let articles = sqlx::query_as!(Article, "SELECT * FROM articles")
+    let articles = sqlx::query_as!(Article, "SELECT * FROM articles ORDER BY published DESC")
         .fetch_all(&mut *conn)
         .await
         .unwrap();

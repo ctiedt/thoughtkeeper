@@ -13,6 +13,7 @@ chrono = { version = "0.4.31", features = ["serde", "libc", "clock"] }
 clap = { version = "4.4.8", features = ["derive"] }
 comfy-table = "7.1.0"
 figment = { version = "0.10.12", features = ["toml"] }
+itertools = "0.12.0"
 miette = { version = "5.10.0", features = ["fancy"] }
 reqwest = { version = "0.11.22", features = ["json"] }
 serde = { version = "1.0.193", features = ["derive"] }

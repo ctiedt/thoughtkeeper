@@ -3,7 +3,7 @@ mod client;
 mod request;
 mod serve;
 
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
 
 use clap::{Args, Parser};
 use figment::{
@@ -24,6 +24,17 @@ pub enum Command {
     List,
     /// Yank (delete) the article with the given ID
     Yank { id: String },
+    /// Update the title or content of an existing article
+    Update {
+        /// The article to update
+        id: String,
+        #[arg(short, long)]
+        /// The new title
+        title: Option<String>,
+        #[arg(short, long)]
+        /// The path of the updated content
+        path: Option<String>,
+    },
 }
 
 #[derive(Args)]
@@ -43,7 +54,9 @@ pub struct ServerConfig {
     blog_name: String,
     author: String,
     description: String,
+    footer_links: HashMap<String, String>,
     addr: SocketAddr,
+    domain: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -77,6 +90,15 @@ async fn main() -> miette::Result<()> {
         }
         Command::Yank { id } => {
             client::yank(config.client.ok_or(miette!("no client config found"))?, id).await?
+        }
+        Command::Update { id, title, path } => {
+            client::update(
+                config.client.ok_or(miette!("no client config found"))?,
+                id,
+                title,
+                path,
+            )
+            .await?
         }
     }
 

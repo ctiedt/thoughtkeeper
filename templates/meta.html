@@ -1,7 +1,8 @@
-<html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
 
 <head>
     <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style.css">
 
     {% block head %}
@@ -10,18 +11,20 @@
 </head>
 
 <body>
-    <nav role="navigation" class="navbar">
-        <div class="navbar-brand">
-            <a href="/" class="navbar-item has-text-weight-bold">{{config.blog_name}}</a>
-        </div>
-    </nav>
+    <header>
+        <nav role="navigation">
+            <h1><a href="/" class="brand">{{config.blog_name}}</a></h1>
+        </nav>
+    </header>
     <main class="content">
         {% block body %}
         {% endblock %}
     </main>
 
     <footer>
-        <a href="{{config.addr}}">Home</a>
+        {%for (title, link) in config.footer_links %}
+        <a href="{{link}}">{{title}}</a>
+        {% endfor %}
     </footer>
 </body>
 
