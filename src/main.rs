@@ -1,11 +1,11 @@
 mod article;
 mod client;
 mod request;
-mod serve;
+mod server;
 
 use std::{collections::HashMap, net::SocketAddr};
 
-use clap::{Args, Parser};
+use clap::{Args, Parser, Subcommand};
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -35,12 +35,31 @@ pub enum Command {
         /// The path of the updated content
         path: Option<String>,
     },
+    /// Manage server-side secrets
+    #[command(subcommand)]
+    Secret(SecretOperation),
 }
 
 #[derive(Args)]
 pub struct Publish {
     path: String,
     title: Option<String>,
+}
+
+#[derive(Subcommand)]
+pub enum SecretOperation {
+    /// Create a new secret, optionally with a description
+    Create {
+        #[arg(short, long)]
+        description: Option<String>,
+    },
+    /// List the existing secrets by ID. Does not actually show the secrets.
+    List,
+    /// Revokes the secret with the given ID
+    Revoke {
+        #[arg(short, long)]
+        id: i64,
+    },
 }
 
 #[derive(Deserialize)]
@@ -76,7 +95,7 @@ async fn main() -> miette::Result<()> {
 
     match command {
         Command::Serve => {
-            serve::serve(config.server.ok_or(miette!("no server config found"))?).await?
+            server::serve(config.server.ok_or(miette!("no server config found"))?).await?
         }
         Command::Publish(article) => {
             client::publish(
@@ -100,6 +119,11 @@ async fn main() -> miette::Result<()> {
             )
             .await?
         }
+        Command::Secret(operation) => match operation {
+            SecretOperation::Create { description } => server::create_secret(description).await?,
+            SecretOperation::List => server::list_secrets().await?,
+            SecretOperation::Revoke { id } => server::revoke_secret(id).await?,
+        },
     }
 
     Ok(())

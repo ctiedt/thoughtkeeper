@@ -4,7 +4,13 @@ use serde::{Deserialize, Serialize};
 use crate::article::Article;
 
 #[derive(Serialize, Deserialize)]
-pub enum Request {
+pub struct Request {
+    pub secret: String,
+    pub request: InnerRequest,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum InnerRequest {
     CreateArticle {
         title: String,
         content: String,

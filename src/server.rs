@@ -8,15 +8,24 @@ use axum::{
 
 use miette::IntoDiagnostic;
 
-use sqlx::{pool::PoolConnection, Pool, Sqlite, SqlitePool};
+use sqlx::{
+    pool::PoolConnection, sqlite::SqliteConnectOptions, ConnectOptions, Pool, Sqlite,
+    SqliteConnection, SqlitePool,
+};
 use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
     article::{Article, ArticleTemplate},
-    request::{ArticleMetadata, Request, Response},
+    request::{ArticleMetadata, InnerRequest, Request, Response},
     ServerConfig,
 };
+use comfy_table::{Row, Table};
+use rand::{
+    distributions::{Alphanumeric, DistString},
+    thread_rng,
+};
+use std::str::FromStr;
 
 #[derive(Clone)]
 struct BlogState {
@@ -36,8 +45,12 @@ async fn handle_api_request(
 ) -> impl IntoResponse {
     let mut conn = state.get_conn().await;
 
-    match request {
-        Request::CreateArticle { title, content } => {
+    if !is_secret_valid(&request.secret, &mut *conn).await.unwrap() {
+        return Json(Response::Error("Invalid secret".to_string())).into_response();
+    }
+
+    match request.request {
+        InnerRequest::CreateArticle { title, content } => {
             let article = Article::new(title, content);
 
             sqlx::query!(
@@ -53,7 +66,7 @@ async fn handle_api_request(
 
             Json(Response::ArticleId(article.id)).into_response()
         }
-        Request::GetArticle { id } => {
+        InnerRequest::GetArticle { id } => {
             let article = sqlx::query_as!(Article, "SELECT * FROM articles WHERE id = ?", id)
                 .fetch_one(&mut *conn)
                 .await
@@ -61,7 +74,7 @@ async fn handle_api_request(
 
             Json(serde_json::to_string(&article).unwrap()).into_response()
         }
-        Request::YankArticle { id } => {
+        InnerRequest::YankArticle { id } => {
             sqlx::query!("DELETE FROM articles WHERE id = ?", id)
                 .execute(&mut *conn)
                 .await
@@ -69,7 +82,7 @@ async fn handle_api_request(
 
             Json(Response::Ok).into_response()
         }
-        Request::ListArticles => {
+        InnerRequest::ListArticles => {
             let articles = sqlx::query!("SELECT id, title, published FROM articles")
                 .fetch_all(&mut *conn)
                 .await
@@ -87,7 +100,7 @@ async fn handle_api_request(
             ))
             .into_response()
         }
-        Request::UpdateArticle { id, title, content } => {
+        InnerRequest::UpdateArticle { id, title, content } => {
             match (title, content) {
                 (Some(title), Some(content)) => {
                     sqlx::query!(
@@ -188,4 +201,78 @@ pub async fn serve(config: ServerConfig) -> miette::Result<()> {
         .await
         .into_diagnostic()?;
     Ok(())
+}
+
+pub async fn create_secret(description: Option<String>) -> miette::Result<()> {
+    let secret = Alphanumeric.sample_string(&mut thread_rng(), 64);
+
+    let mut conn = SqliteConnectOptions::from_str("sqlite://articles.db")
+        .into_diagnostic()?
+        .connect()
+        .await
+        .into_diagnostic()?;
+
+    sqlx::query!(
+        "INSERT INTO secrets (secret, description) VALUES (?1, ?2)",
+        secret,
+        description
+    )
+    .execute(&mut conn)
+    .await
+    .into_diagnostic()?;
+
+    println!("Your client secret is:");
+    println!("{secret}");
+    println!("Please note that you will *not* be able to see it again.");
+    Ok(())
+}
+
+pub async fn list_secrets() -> miette::Result<()> {
+    let mut conn = SqliteConnectOptions::from_str("sqlite://articles.db")
+        .into_diagnostic()?
+        .connect()
+        .await
+        .into_diagnostic()?;
+
+    let secrets = sqlx::query!("SELECT id, description FROM secrets",)
+        .fetch_all(&mut conn)
+        .await
+        .into_diagnostic()?;
+
+    let mut table = Table::new();
+    table.set_header(Row::from(vec!["ID", "Description"]));
+    for row in secrets {
+        table.add_row([
+            &row.id.to_string(),
+            &row.description.unwrap_or("-".to_string()),
+        ]);
+    }
+    println!("{table}");
+
+    Ok(())
+}
+
+pub async fn revoke_secret(id: i64) -> miette::Result<()> {
+    let mut conn = SqliteConnectOptions::from_str("sqlite://articles.db")
+        .into_diagnostic()?
+        .connect()
+        .await
+        .into_diagnostic()?;
+
+    sqlx::query!("DELETE FROM secrets where id = ?", id)
+        .execute(&mut conn)
+        .await
+        .into_diagnostic()?;
+
+    Ok(())
+}
+
+async fn is_secret_valid(secret: &str, conn: &mut SqliteConnection) -> miette::Result<bool> {
+    Ok(
+        sqlx::query!("SELECT id FROM secrets WHERE secret = ?", secret)
+            .fetch_optional(conn)
+            .await
+            .into_diagnostic()?
+            .is_some(),
+    )
 }

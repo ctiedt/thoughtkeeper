@@ -5,7 +5,7 @@ use miette::IntoDiagnostic;
 use reqwest::Client;
 
 use crate::{
-    request::{Request, Response},
+    request::{InnerRequest, Request, Response},
     ClientConfig, Publish,
 };
 
@@ -25,14 +25,21 @@ pub async fn publish(article: Publish, conf: ClientConfig) -> miette::Result<()>
         }
     };
 
-    let request = Request::CreateArticle { title, content };
+    let request = Request {
+        secret: conf.secret,
+        request: InnerRequest::CreateArticle { title, content },
+    };
     let client = Client::new();
-    client
+    let resp = client
         .post(format!("{}/api", conf.addr))
         .json(&request)
         .send()
         .await
         .into_diagnostic()?;
+
+    if let Response::Error(err) = resp.json().await.into_diagnostic()? {
+        println!("An error occured: {err}")
+    }
 
     Ok(())
 }
@@ -40,7 +47,10 @@ pub async fn publish(article: Publish, conf: ClientConfig) -> miette::Result<()>
 pub async fn list(conf: ClientConfig) -> miette::Result<()> {
     let resp = Client::new()
         .post(format!("{}/api", conf.addr))
-        .json(&Request::ListArticles)
+        .json(&Request {
+            secret: conf.secret,
+            request: InnerRequest::ListArticles,
+        })
         .send()
         .await
         .into_diagnostic()?;
@@ -69,7 +79,10 @@ pub async fn list(conf: ClientConfig) -> miette::Result<()> {
 pub async fn yank(conf: ClientConfig, id: String) -> miette::Result<()> {
     let resp = Client::new()
         .post(format!("{}/api", conf.addr))
-        .json(&Request::YankArticle { id })
+        .json(&Request {
+            secret: conf.secret,
+            request: InnerRequest::YankArticle { id },
+        })
         .send()
         .await
         .into_diagnostic()?;
@@ -95,7 +108,10 @@ pub async fn update(
 
     let resp = Client::new()
         .post(format!("{}/api", conf.addr))
-        .json(&Request::UpdateArticle { id, title, content })
+        .json(&Request {
+            secret: conf.secret,
+            request: InnerRequest::UpdateArticle { id, title, content },
+        })
         .send()
         .await
         .into_diagnostic()?;

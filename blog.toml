@@ -1,10 +1,10 @@
 [server]
-blog_name = "Ramblings & Musings"
-author = "Clemens Tiedt"
-description = "My less edited, more stream of consciousness thoughts. May contain opinions."
-footer_links = { "Home" = "/", "My Website" = "https://tiedt.dev", "My Other Blog" = "https://blog.tiedt.dev" }
+blog_name = "Your Awesome Blog Name"
+author = "You"
+description = "Your awesome blog description"
+footer_links = { "Home" = "/", "Your Website" = "https://your.website", "Your Other Links" = "https://example.com" }
 addr = "0.0.0.0:4444"
-domain = "ramblings.tiedt.dev"
+domain = "your.domain"
 
 [client]
 addr = "http://localhost:4444"
