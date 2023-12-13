@@ -45,7 +45,7 @@ async fn handle_api_request(
 ) -> impl IntoResponse {
     let mut conn = state.get_conn().await;
 
-    if !is_secret_valid(&request.secret, &mut *conn).await.unwrap() {
+    if !is_secret_valid(&request.secret, &mut conn).await.unwrap() {
         return Json(Response::Error("Invalid secret".to_string())).into_response();
     }
 
