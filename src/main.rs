@@ -1,5 +1,6 @@
 mod article;
 mod client;
+mod error;
 mod request;
 mod server;
 

@@ -16,7 +16,7 @@ pub enum InnerRequest {
         content: String,
     },
     GetArticle {
-        id: String,
+        url: String,
     },
     YankArticle {
         id: String,
