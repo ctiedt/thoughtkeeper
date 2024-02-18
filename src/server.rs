@@ -8,6 +8,7 @@ use axum::{
     Json, Router,
 };
 
+use comrak::ComrakOptions;
 use itertools::Itertools;
 use miette::IntoDiagnostic;
 
@@ -177,9 +178,15 @@ async fn get_article(
                 .await
                 .unwrap();
 
+            let mut options = ComrakOptions::default();
+            options.extension.footnotes = true;
+            options.extension.table = true;
+            options.extension.header_ids = true;
+
             Ok(ArticleTemplate {
                 config: state.config,
                 article,
+                options,
             }
             .into_response())
         }
