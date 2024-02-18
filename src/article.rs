@@ -1,6 +1,6 @@
 use askama::Template;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
-use comrak::{ComrakOptions, Options};
+use comrak::Options;
 use figment::{
     providers::{Format, Toml},
     Figment,
@@ -93,8 +93,8 @@ pub fn to_url(title: &str) -> String {
 
 #[derive(Clone, Template)]
 #[template(path = "article.html")]
-pub struct ArticleTemplate {
+pub struct ArticleTemplate<'a> {
     pub config: ServerConfig,
     pub article: Article,
-    pub options: ComrakOptions,
+    pub options: &'a Options,
 }
