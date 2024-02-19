@@ -20,4 +20,22 @@
 
 {{article.content.clone()|markdown(options)}}
 
+<h3>Comments</h3>
+
+<form method="post">
+    <input name="author" type="text" placeholder="Your name" />
+    <textarea name="content" placeholder="Your comment"></textarea>
+    <input type="hidden" name="article" value="{{article.id}}" />
+    <input type="submit" value="Submit Comment" />
+</form>
+
+{% for comment in comments %}
+<article>
+    <a href="#{{comment.id}}">
+        <h5 id="{{comment.id}}">{{comment.author}} | {{comment.published()}}</h5>
+    </a>
+    <p>{{comment.content}}</p>
+</article>
+{% endfor %}
+
 {% endblock %}

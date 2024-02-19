@@ -3,9 +3,9 @@ use askama_axum::IntoResponse;
 use axum::{
     extract::{Path, State},
     http::header,
-    response::Response as AxumResponse,
+    response::{Redirect, Response as AxumResponse},
     routing::{get, get_service, post},
-    Json, Router,
+    Form, Json, Router,
 };
 
 use comrak::Options;
@@ -22,6 +22,7 @@ use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
     article::{to_url, Article, ArticleTemplate},
+    comment::{Comment, CommentRequest},
     error::TkError,
     request::{ArticleMetadata, InnerRequest, Request, Response},
     ServerConfig,
@@ -187,9 +188,19 @@ async fn get_article(
             options.extension.autolink = true;
             options.render.escape = true;
 
+            let comments = sqlx::query_as!(
+                Comment,
+                "SELECT * FROM comments WHERE article = ? ORDER BY published DESC",
+                id
+            )
+            .fetch_all(&mut *conn)
+            .await
+            .unwrap();
+
             Ok(ArticleTemplate {
                 config: state.config,
                 article,
+                comments,
                 options: &options,
             }
             .into_response())
@@ -199,6 +210,20 @@ async fn get_article(
         }
         .into_response()),
     }
+}
+
+async fn post_comment(
+    Path(_id): Path<String>,
+    State(state): State<BlogState>,
+    Form(request): Form<CommentRequest>,
+) -> Result<AxumResponse, TkError> {
+    let mut conn = state.get_conn().await;
+    let comment = Comment::from_request(request);
+
+    sqlx::query!("INSERT INTO comments ( id, article, author, content, published ) VALUES (?1, ?2, ?3, ?4, ?5)",
+comment.id, comment.article, comment.author, comment.content, comment.published).execute(&mut *conn).await.into_diagnostic()?;
+
+    Ok(Redirect::to("").into_response())
 }
 
 #[derive(Template)]
@@ -263,6 +288,7 @@ pub async fn serve(config: ServerConfig) -> miette::Result<()> {
         )
         .route("/", get(index))
         .route("/article/:id", get(get_article))
+        .route("/article/:id", post(post_comment))
         .route("/api", post(handle_api_request))
         .route("/rss", get(rss_feed))
         .fallback(get(|| async { ErrorPage { config: error_cfg } }))

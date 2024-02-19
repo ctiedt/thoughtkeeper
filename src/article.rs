@@ -1,5 +1,5 @@
 use askama::Template;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use comrak::Options;
 use figment::{
     providers::{Format, Toml},
@@ -10,7 +10,7 @@ use rss::{Guid, Item};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{Config, ServerConfig};
+use crate::{comment::Comment, Config, ServerConfig};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Article {
@@ -96,5 +96,6 @@ pub fn to_url(title: &str) -> String {
 pub struct ArticleTemplate<'a> {
     pub config: ServerConfig,
     pub article: Article,
+    pub comments: Vec<Comment>,
     pub options: &'a Options,
 }
