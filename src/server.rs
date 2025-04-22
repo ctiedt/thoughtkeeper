@@ -1,9 +1,9 @@
 use askama::Template;
-use askama_axum::IntoResponse;
+use askama_web::WebTemplate;
 use axum::{
     extract::{Path, State},
     http::header,
-    response::{Redirect, Response as AxumResponse},
+    response::{IntoResponse, Redirect, Response as AxumResponse},
     routing::{get, get_service, post},
     Form, Json, Router,
 };
@@ -20,6 +20,7 @@ use sqlx::{
 use tokio::net::TcpListener;
 use tower_http::services::{ServeDir, ServeFile};
 
+use crate::filters;
 use crate::{
     article::{to_url, Article, ArticleTemplate},
     comment::{Comment, CommentRequest},
@@ -29,8 +30,8 @@ use crate::{
 };
 use comfy_table::{Row, Table};
 use rand::{
-    distributions::{Alphanumeric, DistString},
-    thread_rng,
+    distr::{Alphanumeric, SampleString},
+    rng,
 };
 use std::str::FromStr;
 
@@ -201,7 +202,6 @@ async fn get_article(
                 config: state.config,
                 article,
                 comments,
-                options: &options,
             }
             .into_response())
         }
@@ -226,7 +226,7 @@ comment.id, comment.article, comment.author, comment.content, comment.published)
     Ok(Redirect::to("").into_response())
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "index.html")]
 struct IndexPage {
     config: ServerConfig,
@@ -247,7 +247,7 @@ async fn index(State(state): State<BlogState>) -> Result<AxumResponse, TkError> 
     .into_response())
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "404.html")]
 struct ErrorPage {
     config: ServerConfig,
@@ -287,8 +287,8 @@ pub async fn serve(config: ServerConfig) -> miette::Result<()> {
             get_service(ServeDir::new("static").not_found_service(ServeFile::new("/404.html"))),
         )
         .route("/", get(index))
-        .route("/article/:id", get(get_article))
-        .route("/article/:id", post(post_comment))
+        .route("/article/{id}", get(get_article))
+        .route("/article/{id}", post(post_comment))
         .route("/api", post(handle_api_request))
         .route("/rss", get(rss_feed))
         .fallback(get(|| async { ErrorPage { config: error_cfg } }))
@@ -302,7 +302,7 @@ pub async fn serve(config: ServerConfig) -> miette::Result<()> {
 }
 
 pub async fn create_secret(description: Option<String>) -> miette::Result<()> {
-    let secret = Alphanumeric.sample_string(&mut thread_rng(), 64);
+    let secret = Alphanumeric.sample_string(&mut rng(), 64);
 
     let mut conn = SqliteConnectOptions::from_str("sqlite://articles.db")
         .into_diagnostic()?

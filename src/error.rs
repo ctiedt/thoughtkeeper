@@ -1,10 +1,9 @@
-use askama_axum::IntoResponse;
-use axum::http::StatusCode;
+use axum::{http::StatusCode, response::IntoResponse};
 
 pub struct TkError(miette::Error);
 
 impl IntoResponse for TkError {
-    fn into_response(self) -> askama_axum::Response {
+    fn into_response(self) -> axum::response::Response {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Internal Server Error: {}", self.0),

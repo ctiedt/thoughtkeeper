@@ -2,6 +2,7 @@ mod article;
 mod client;
 mod comment;
 mod error;
+mod filters;
 mod request;
 mod server;
 

@@ -1,4 +1,5 @@
 use askama::Template;
+use askama_web::WebTemplate;
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use comrak::Options;
 use figment::{
@@ -10,6 +11,7 @@ use rss::{Guid, Item};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::filters;
 use crate::{comment::Comment, Config, ServerConfig};
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -91,11 +93,10 @@ pub fn to_url(title: &str) -> String {
         .collect()
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "article.html")]
-pub struct ArticleTemplate<'a> {
+pub struct ArticleTemplate {
     pub config: ServerConfig,
     pub article: Article,
     pub comments: Vec<Comment>,
-    pub options: &'a Options,
 }

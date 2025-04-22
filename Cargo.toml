@@ -7,30 +7,26 @@ edition = "2021"
 
 [dependencies]
 # askama = { version = "0.12.1", features = ["markdown"] }
-askama = { git = "https://github.com/djc/askama/", features = ["markdown"] }
+# askama = { git = "https://github.com/djc/askama/", features = ["markdown"] }
+askama = "0.13"
+askama_web = { version = "0.13", features = ["axum-0.8"] }
 #askama_axum = "0.4.0"
-askama_axum = { git = "https://github.com/djc/askama" }
-axum = "0.7.4"
+# askama_axum = { git = "https://github.com/djc/askama" }
+axum = "0.8.3"
 chrono = { version = "0.4.31", features = ["serde", "libc", "clock"] }
 clap = { version = "4.4.8", features = ["derive"] }
 comfy-table = "7.1.0"
-comrak = "0.21.0"
+comrak = "0.38.0"
 figment = { version = "0.10.12", features = ["toml"] }
-itertools = "0.12.0"
+itertools = "0.14.0"
 miette = { version = "7.1.0", features = ["fancy"] }
-rand = "0.8.5"
-reqwest = { version = "0.11.22", features = ["json"] }
+rand = "0.9.1"
+reqwest = { version = "0.12.15", features = ["json"] }
 rss = "2.0.6"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
-sqlx = { version = "0.7.3", features = [
-    "sqlite",
-    "uuid",
-    "runtime-tokio",
-    "json",
-    "chrono",
-] }
+sqlx = { version = "0.8.5", features = ["sqlite", "uuid", "runtime-tokio", "json", "chrono"] }
 tokio = { version = "1.36.0", features = ["full"] }
-tower = "0.4.13"
-tower-http = { version = "0.5.1", features = ["fs"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.2", features = ["fs"] }
 uuid = { version = "1.7.0", features = ["v4", "v8"] }
